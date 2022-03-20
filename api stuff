@@ -1,0 +1,46 @@
+import time
+import hmac
+import hashlib
+import requests
+import json
+from datetime import datetime as DateTime
+
+# API url
+bitso_url = "https://global-openapi.bithumb.pro/openapi/v1"
+# Obtained api and secret keys for handling private requests
+apiKey = "7386985932b6a5cc9dfa7224c*******"
+secretKey ='bcf0dda788e6de62a7deab118713a7ce53646ae5836bc08deefb57e7********'
+
+# A valid number to avoid replay attacks
+msgNo = str(int(round(time.time())) * 100000 * 2)
+
+#timestamp
+ts = str(int(DateTime.now().timestamp() * 1000))
+
+# Desired HTTP method
+request_path = "/spot/placeOrder"
+
+# Create secure signature with API documentation specification
+message = "apiKey=" + apiKey + "&msgNo=" + msgNo + "&timestamp=" + ts + "&version=V1.0.0"
+signature = hmac.new(secretKey.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
+
+# The required info that endpoint requires to process info
+payload = {'symbol': 'TRX-USDT',
+           'type': 'limit',
+           'side': 'sell',
+           'price': '.0621',
+           'quantity': '1000',
+           'timestamp': ts,
+           'apiKey': apiKey,
+           'msgNo': msgNo,
+           'version': 'V1.0.0',
+           'signature': signature.lower()
+           }
+
+# Send request
+response = requests.post(bitso_url + request_path,
+                         headers={'Content-Type': 'application/json'},
+                         json=payload,
+                         )
+
+print(response.text)
